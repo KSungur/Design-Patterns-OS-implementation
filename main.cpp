@@ -8,6 +8,12 @@ public:
     virtual void fileInput() = 0;
 
     virtual void fileOutput() = 0;
+
+    virtual void openFile() = 0;
+
+    virtual void writeFile() = 0;
+
+    virtual void closeFile() = 0;
 };
 
 /**
@@ -22,6 +28,18 @@ public:
 
     void fileOutput() {
         cout << "Linux Output \n";
+    }
+
+    void openFile() {
+        cout << "Opening file in Linux OS" << endl;
+    }
+
+    void writeFile() {
+        cout << "Writing file in Linux OS" << endl;
+    }
+
+    void closeFile() {
+        cout << "Closing file in Linux OS" << endl;
     }
 };
 
@@ -38,6 +56,18 @@ public:
     void fileOutput() {
         cout << "BSD Output \n";
     }
+
+    void openFile() {
+        cout << "Opening file in BSD OS" << endl;
+    }
+
+    void writeFile() {
+        cout << "Writing file in BSD OS" << endl;
+    }
+
+    void closeFile() {
+        cout << "Closing file in BSD OS" << endl;
+    }
 };
 
 /**
@@ -52,6 +82,18 @@ public:
 
     void fileOutput() {
         cout << "NT Output \n";
+    }
+
+    void openFile() {
+        cout << "Opening file in Windows OS" << endl;
+    }
+
+    void writeFile() {
+        cout << "Writing file in Windows OS" << endl;
+    }
+
+    void closeFile() {
+        cout << "Closing file in Windows OS" << endl;
     }
 };
 
@@ -126,8 +168,104 @@ public:
         fileSystem[0]->fileOutput();
         fileSystem[1]->fileInput();
     }
+};
+
+/**
+ * Command Pattern
+ *
+ */
+class OperatingSys {
+public:
+    virtual void exec() = 0;
+
+protected:
+    OperatingSys() {};
+};
+
+/**
+ * Commands
+ */
+
+class OpenFile : public OperatingSys {
+public:
+    OpenFile(OperatingSys *operatingSys) {
+        fileSystem = operatingSys;
+    }
+
+    void exec() {
+        fileSystem->openFile();
+    }
+
+private:
+    FileSystem *fileSystem;
+};
+
+class WriteFile : public OperatingSys {
+public:
+    WriteFile(OperatingSys *operatingSys) {
+        fileSystem = operatingSys;
+    }
+
+    void exec(char &c) {
+        fileSystem->writeFile();
+    }
+
+private:
+    FileSystem *fileSystem;
+};
+
+class CloseFile : public OperatingSys {
+public:
+
+    CloseFile(OperatingSys *operatingSys) {
+        fileSystem = operatingSys;
+    }
+
+    void exec(char &c) {
+        fileSystem->closeFile();
+    }
+
+private:
+    FileSystem *fileSystem;
+};
+
+/**
+ * Invoker
+ */
+
+class FileInvoker {
+public:
+    OperatingSys *operatingSys;
+
+    FileInvoker(OperatingSys os) {
+        operatingSys = os;
+    }
+    void exec () {
+        operatingSys->exec();
+    }
+};
+
+/**
+ * Receiver
+ */
+
+class FileSystemReceiver {
+public:
 
 };
+
+/**
+ * Macro Command
+ *
+ */
+class RestartCommand : public OperatingSys {
+public:
+    void exec() {
+
+    }
+
+};
+
 
 int main() {
     OSFactory *factory;
