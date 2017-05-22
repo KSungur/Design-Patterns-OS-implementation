@@ -11,11 +11,11 @@ public:
 
     virtual void loadFS() = 0;
 
-    virtual void openFile() = 0;
-
-    virtual void writeFile() = 0;
-
-    virtual void closeFile() = 0;
+//    virtual void openFile() = 0;
+//
+//    virtual void writeFile() = 0;
+//
+//    virtual void closeFile() = 0;
 
 };
 
@@ -35,17 +35,17 @@ public:
                 "user@user:~$";
     }
 
-    void openFile() {
-        cout << "Opening file in Linux OS" << endl;
-    }
-
-    void writeFile() {
-        cout << "Writing file in Linux OS" << endl;
-    }
-
-    void closeFile() {
-        cout << "Closing file in Linux OS" << endl;
-    }
+//    void openFile() {
+//        cout << "Opening file in Linux OS" << endl;
+//    }
+//
+//    void writeFile() {
+//        cout << "Writing file in Linux OS" << endl;
+//    }
+//
+//    void closeFile() {
+//        cout << "Closing file in Linux OS" << endl;
+//    }
 
 };
 
@@ -64,17 +64,17 @@ public:
                 "---Executing systemd \n"
                 "user@user:~#";
     }
-    void openFile() {
-        cout << "Opening file in BSD OS" << endl;
-    }
-
-    void writeFile() {
-        cout << "Writing file in BSD OS" << endl;
-    }
-
-    void closeFile() {
-        cout << "Closing file in BSD OS" << endl;
-    }
+//    void openFile() {
+//        cout << "Opening file in BSD OS" << endl;
+//    }
+//
+//    void writeFile() {
+//        cout << "Writing file in BSD OS" << endl;
+//    }
+//
+//    void closeFile() {
+//        cout << "Closing file in BSD OS" << endl;
+//    }
 
 };
 
@@ -95,18 +95,18 @@ public:
                 "(c) 2016 Microsoft Corporation. All rights reserved. \n"
                 "C:\\Users\\User> \n";
     }
-
-    void openFile() {
-        cout << "Opening file in BSD OS" << endl;
-    }
-
-    void writeFile() {
-        cout << "Writing file in BSD OS" << endl;
-    }
-
-    void closeFile() {
-        cout << "Closing file in BSD OS" << endl;
-    }
+//
+//    void openFile() {
+//        cout << "Opening file in BSD OS" << endl;
+//    }
+//
+//    void writeFile() {
+//        cout << "Writing file in BSD OS" << endl;
+//    }
+//
+//    void closeFile() {
+//        cout << "Closing file in BSD OS" << endl;
+//    }
 
 
 };
@@ -231,9 +231,9 @@ public:
         };
         fileSystem[0]->bootOS();
         fileSystem[1]->loadFS();
-        fileSystem[2]->openFile();
-        fileSystem[3]->writeFile();
-        fileSystem[4]->closeFile();
+//        fileSystem[2]->openFile();
+//        fileSystem[3]->writeFile();
+//        fileSystem[4]->closeFile();
     }
 };
 
@@ -273,7 +273,7 @@ public:
         fileSystem = osFactory;
     }
 
-    void exec(char &c) {
+    void exec() {
         fileSystem->writeFile();
     }
 
@@ -288,7 +288,7 @@ public:
         fileSystem = osFactory;
     }
 
-    void exec(char &c) {
+    void exec() {
         fileSystem->closeFile();
     }
 
@@ -313,7 +313,6 @@ public:
     }
 };
 
-class FileSystemReceiverUtil {};
 
 /**
  * Client
@@ -321,24 +320,7 @@ class FileSystemReceiverUtil {};
 
 //class FileSystemClient {
 //public:
-//    OSFactory *osFactory;
 //
-//    //creating command and associating with receiver
-//    OpenFile openFileCommand = new OpenFile(osFactory);
-//
-//    //Creating invoker and associating with Command
-//    FileInvoker file = new FileInvoker(openFileCommand);
-//
-//    //perform action on invoker object
-//    file.exec();
-//
-//    WriteFile writeFileCommand = new WriteFile(osFactory);
-//    file = new FileInvoker(writeFileCommand);
-//    file.exec();
-//
-//    CloseFile closeFileCommand = new CloseFile(osFactory);
-//    file = new FileInvoker(closeFileCommand);
-//    file.exec();
 //};
 
 
@@ -357,6 +339,24 @@ public:
 
 int main() {
     OSFactory *factory;
+
+//    //creating command and associating with receiver
+//    OpenFile *openFileCommand = new OpenFile(factory);
+//
+//    //Creating invoker and associating with Command
+//    FileInvoker *file = new FileInvoker(openFileCommand);
+//
+//    //perform action on invoker object
+//    file->exec();
+//
+//    WriteFile *writeFileCommand = new WriteFile(factory);
+//    file = new FileInvoker(writeFileCommand);
+//    file->exec();
+//
+//    CloseFile *closeFileCommand = new CloseFile(factory);
+//    file = new FileInvoker(closeFileCommand);
+//    file->exec();
+
     char osType;
     cout << "GRUB MENU: \n"
             "Choose OS: \n "
@@ -381,5 +381,5 @@ int main() {
 
     OSClient *c = new OSClient(factory);
     c->display_IO();
-
+    delete c;
 }
