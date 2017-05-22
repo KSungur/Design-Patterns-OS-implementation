@@ -4,3 +4,13 @@
 *.iml
 
 *.xml
+
+*.txt
+
+*.cmake
+
+cmake-build-debug/CMakeFiles/
+
+cmake-build-debug/
+
+\.idea/\.name

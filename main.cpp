@@ -1,19 +1,22 @@
 #include <iostream>
 #include<vector>
+#include <typeinfo>
+#include <string>
 
 using namespace std;
 
 class FileSystem {
 public:
-    virtual void fileInput() = 0;
+    virtual void bootOS() = 0;
 
-    virtual void fileOutput() = 0;
+    virtual void loadFS() = 0;
 
     virtual void openFile() = 0;
 
     virtual void writeFile() = 0;
 
     virtual void closeFile() = 0;
+
 };
 
 /**
@@ -22,12 +25,14 @@ public:
 
 class Linux : public FileSystem {
 public:
-    void fileInput() {
-        cout << "Linux Input \n";
+    void bootOS() {
+        cout << "Booting into Linux \n";
     }
 
-    void fileOutput() {
-        cout << "Linux Output \n";
+    void loadFS() {
+        cout << "---Initializing Kernel \n"
+                "---Executing systemd \n"
+                "user@user:~$";
     }
 
     void openFile() {
@@ -41,6 +46,7 @@ public:
     void closeFile() {
         cout << "Closing file in Linux OS" << endl;
     }
+
 };
 
 /**
@@ -49,12 +55,45 @@ public:
 
 class BSD : public FileSystem {
 public:
-    void fileInput() {
-        cout << "BSD Input \n";
+    void bootOS() {
+        cout << "Booting into BSD \n";
     }
 
-    void fileOutput() {
-        cout << "BSD Output \n";
+    void loadFS() {
+        cout << "---Initializing Kernel \n"
+                "---Executing systemd \n"
+                "user@user:~#";
+    }
+    void openFile() {
+        cout << "Opening file in BSD OS" << endl;
+    }
+
+    void writeFile() {
+        cout << "Writing file in BSD OS" << endl;
+    }
+
+    void closeFile() {
+        cout << "Closing file in BSD OS" << endl;
+    }
+
+};
+
+/**
+ * Concrete Product 3
+ */
+
+class NT : public FileSystem {
+public:
+    void bootOS() {
+        cout << "Booting into NT \n";
+    }
+
+    void loadFS() {
+        cout << "---DO NOT use Windows, use GNU/Linux or BSD instead\n"
+                "---Initializing Windows Kernel \n"
+                "Microsoft Windows [Version 10.0.14393] \n"
+                "(c) 2016 Microsoft Corporation. All rights reserved. \n"
+                "C:\\Users\\User> \n";
     }
 
     void openFile() {
@@ -68,33 +107,8 @@ public:
     void closeFile() {
         cout << "Closing file in BSD OS" << endl;
     }
-};
 
-/**
- * Concrete Product 3
- */
 
-class NT : public FileSystem {
-public:
-    void fileInput() {
-        cout << "NT Input \n";
-    }
-
-    void fileOutput() {
-        cout << "NT Output \n";
-    }
-
-    void openFile() {
-        cout << "Opening file in Windows OS" << endl;
-    }
-
-    void writeFile() {
-        cout << "Writing file in Windows OS" << endl;
-    }
-
-    void closeFile() {
-        cout << "Closing file in Windows OS" << endl;
-    }
 };
 
 /**
@@ -104,9 +118,15 @@ public:
 
 class OSFactory {
 public:
-    virtual FileSystem *makeOutput()=0;
+    virtual FileSystem *loadFileSystem()=0;
 
-    virtual FileSystem *getInput()=0;
+    virtual FileSystem *boot()=0;
+
+    virtual FileSystem *openFile() = 0;
+
+    virtual FileSystem *writeFile() = 0;
+
+    virtual FileSystem *closeFile() = 0;
 };
 
 /**
@@ -116,12 +136,24 @@ public:
  */
 class LinuxFactory : public OSFactory {
 public:
-    FileSystem *makeOutput() {
+    FileSystem *loadFileSystem() {
         return new Linux;
     }
 
-    FileSystem *getInput() {
+    FileSystem *boot() {
         return new Linux;
+    }
+
+    FileSystem *openFile() {
+        cout << "Opening file in Linux OS" << endl;
+    }
+
+    FileSystem *writeFile() {
+        cout << "Writing file in Linux OS" << endl;
+    }
+
+    FileSystem *closeFile() {
+        cout << "Closing file in Linux OS" << endl;
     }
 };
 
@@ -131,25 +163,54 @@ public:
  */
 class BSDFactory : public OSFactory {
 public:
-    FileSystem *makeOutput() {
+    FileSystem *loadFileSystem() {
         return new BSD;
     }
 
-    FileSystem *getInput() {
+    FileSystem *boot() {
         return new BSD;
+    }
+
+    FileSystem *openFile() {
+        cout << "Opening file in BSD OS" << endl;
+    }
+
+    FileSystem *writeFile() {
+        cout << "Writing file in BSD OS" << endl;
+    }
+
+    FileSystem *closeFile() {
+        cout << "Closing file in BSD OS" << endl;
     }
 };
 
 class NTFactory : public OSFactory {
 public:
-    FileSystem *makeOutput() {
+    FileSystem *loadFileSystem() {
         return new NT;
     }
 
-    FileSystem *getInput() {
+    FileSystem *boot() {
         return new NT;
     }
+
+    FileSystem *openFile() {
+        cout << "Opening file in Windows OS" << endl;
+    }
+
+    FileSystem *writeFile() {
+        cout << "Writing file in Windows OS" << endl;
+    }
+
+    FileSystem *closeFile() {
+        cout << "Closing file in Windows OS" << endl;
+    }
 };
+
+/**
+ * Abstract Factory Client
+ *
+ */
 
 class OSClient {
 private:
@@ -162,17 +223,23 @@ public:
 
     void display_IO() {
         FileSystem *fileSystem[] = {
-                factory->makeOutput(),
-                factory->getInput()
+                factory->boot(),
+                factory->loadFileSystem(),
+                factory->openFile(),
+                factory->writeFile(),
+                factory->closeFile(),
         };
-        fileSystem[0]->fileOutput();
-        fileSystem[1]->fileInput();
+        fileSystem[0]->bootOS();
+        fileSystem[1]->loadFS();
+        fileSystem[2]->openFile();
+        fileSystem[3]->writeFile();
+        fileSystem[4]->closeFile();
     }
 };
 
 /**
  * Command Pattern
- *
+ * Command
  */
 class OperatingSys {
 public:
@@ -188,8 +255,8 @@ protected:
 
 class OpenFile : public OperatingSys {
 public:
-    OpenFile(OperatingSys *operatingSys) {
-        fileSystem = operatingSys;
+    OpenFile(OSFactory *osFactory) {
+        fileSystem = osFactory;
     }
 
     void exec() {
@@ -197,13 +264,13 @@ public:
     }
 
 private:
-    FileSystem *fileSystem;
+    OSFactory *fileSystem;
 };
 
 class WriteFile : public OperatingSys {
 public:
-    WriteFile(OperatingSys *operatingSys) {
-        fileSystem = operatingSys;
+    WriteFile(OSFactory *osFactory) {
+        fileSystem = osFactory;
     }
 
     void exec(char &c) {
@@ -211,14 +278,14 @@ public:
     }
 
 private:
-    FileSystem *fileSystem;
+    OSFactory *fileSystem;
 };
 
 class CloseFile : public OperatingSys {
 public:
 
-    CloseFile(OperatingSys *operatingSys) {
-        fileSystem = operatingSys;
+    CloseFile(OSFactory *osFactory) {
+        fileSystem = osFactory;
     }
 
     void exec(char &c) {
@@ -226,7 +293,7 @@ public:
     }
 
 private:
-    FileSystem *fileSystem;
+    OSFactory *fileSystem;
 };
 
 /**
@@ -237,22 +304,43 @@ class FileInvoker {
 public:
     OperatingSys *operatingSys;
 
-    FileInvoker(OperatingSys os) {
+    FileInvoker(OperatingSys *os) {
         operatingSys = os;
     }
-    void exec () {
+
+    void exec() {
         operatingSys->exec();
     }
 };
 
+class FileSystemReceiverUtil {};
+
 /**
- * Receiver
+ * Client
  */
 
-class FileSystemReceiver {
-public:
+//class FileSystemClient {
+//public:
+//    OSFactory *osFactory;
+//
+//    //creating command and associating with receiver
+//    OpenFile openFileCommand = new OpenFile(osFactory);
+//
+//    //Creating invoker and associating with Command
+//    FileInvoker file = new FileInvoker(openFileCommand);
+//
+//    //perform action on invoker object
+//    file.exec();
+//
+//    WriteFile writeFileCommand = new WriteFile(osFactory);
+//    file = new FileInvoker(writeFileCommand);
+//    file.exec();
+//
+//    CloseFile closeFileCommand = new CloseFile(osFactory);
+//    file = new FileInvoker(closeFileCommand);
+//    file.exec();
+//};
 
-};
 
 /**
  * Macro Command
@@ -270,7 +358,8 @@ public:
 int main() {
     OSFactory *factory;
     char osType;
-    cout << "Choose OS; \n "
+    cout << "GRUB MENU: \n"
+            "Choose OS: \n "
             "l for Linux \n"
             "b for BSD \n"
             "n for WindowsNT" << endl;
@@ -292,4 +381,5 @@ int main() {
 
     OSClient *c = new OSClient(factory);
     c->display_IO();
+
 }
