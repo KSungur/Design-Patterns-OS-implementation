@@ -1,132 +1,355 @@
+
+/**
+ * SE 311 Project
+ *
+ * Kutayberk Sungur 20130601036
+ *
+ * Ataberk Uzkal 20130601046
+ *
+ * Source file Pattern Flow
+ * Observer Pattern
+ * Composite Pattern
+ * Iterator Pattern
+ * Command Pattern
+ * Abstract Factory Pattern
+ * Singleton Pattern
+ *
+ */
+
 #include <iostream>
 #include <vector>
-#include <typeinfo>
 #include <string>
+
 
 using namespace std;
 
+class Computer;
 
-// "Component" - COMPOSITE PATTERN
+/**
+ * Semi observer
+ */
+class Components {
+public:
+    virtual void deviceReset() = 0;
+
+/**
+ * Notify Method Declaration
+ */
+    void Notify();
+
+protected:
+    Computer *myComputer;
+};
+
+/**
+ * Notify Method Definition
+ */
+void Components::Notify() {
+
+}
+
+class CPU : public Components {
+    ~CPU() {
+        cout << "Terminate unfinished CPU tasks" << endl;
+    }
+
+public:
+    CPU(Computer *comp) {
+        myComputer = comp;
+        cout << "CPU is loading..." << endl;
+    }
+
+    void deviceReset() {
+        delete this;
+    }
+};
+
+class Mouse : public Components {
+    ~Mouse() {
+        cout << "Disconnecting mouse" << endl;
+    }
+
+public:
+    Mouse(Computer *comp) {
+        myComputer = comp;
+        cout << "Mouse is connected" << endl;
+    }
+
+    void deviceReset() {
+        delete this;
+    }
+
+};
+
+class Keyboard : public Components {
+    ~Keyboard() {
+        cout << "Disconnecting keyboard" << endl;
+    }
+
+public:
+    Keyboard(Computer *comp) {
+        myComputer = comp;
+        cout << "Keyboard is connected" << endl;
+    }
+
+    void deviceReset() {
+        delete this;
+    }
+
+};
+
+class HDD : public Components {
+    ~HDD() {
+        cout << "Computer received shutdown command\n"
+                "Initiating output stream to save changes" << endl;
+    }
+
+public:
+    HDD(Computer *comp) {
+        myComputer = comp;
+        cout << "Hard Disk is loading..." << endl;
+    }
+
+    void deviceReset() {
+        delete this;
+    }
+};
+
+
+/**
+ * Composite Component
+ */
 class Directory {
 public:
-	virtual ~Directory() {};
-	virtual void Display(int indent) {};
-	string getName() { return name; };
-	virtual int getCount() { return NULL; };
-	virtual Directory *get(int) { return NULL; };
-	virtual void Delete() {};
+    virtual ~Directory() {};
+
+    virtual void Display(int indent) {};
+
+    string getName() { return name; };
+
+    virtual int getCount() { return 0; };
+
+    virtual Directory *get(int) { return NULL; };
+
+    virtual void Delete() {};
 protected:
-	Directory(string name) :name(name) {};
+    Directory(string name) : name(name) {};
 private:
-	string name;
-};
-// "Abstract Iterator" - ITERATOR PATTERN
-class AbstractIterator {
-public:
-	virtual void First() = 0;
-	virtual void Next() = 0;
-	virtual bool IsDone() const = 0;
-	virtual Directory* CurrentItem() const = 0;
-protected:
-	AbstractIterator() {};
-};
-// "Concrete Iterator" - ITERATOR PATTERN
-class CompositeIterator : public AbstractIterator {
-public:
-	CompositeIterator(Directory *composite) :
-		_composite(composite), _current(0) {
-	}
-	void First() { _current = 0; };
-	void Next() { _current++; };
-	Directory* CurrentItem() const {
-		return (IsDone() ? NULL : _composite->get(_current));
-	};
-	bool IsDone() const {
-		return _current >= _composite->getCount();
-	};
-private:
-	Directory *_composite;
-	int _current;
+    string name;
 };
 
-// "Leaf" - COMPOSITE PATTERN
+/**
+ *  Abstract Iterator
+ */
+class AbstractIterator {
+public:
+    virtual void First() = 0;
+
+    virtual void Next() = 0;
+
+    virtual bool IsDone() const = 0;
+
+    virtual Directory *CurrentItem() const = 0;
+
+protected:
+    AbstractIterator() {};
+};
+
+/**
+ * Concrete Iterator
+ *
+ */
+class CompositeIterator : public AbstractIterator {
+public:
+    CompositeIterator(Directory *composite) :
+            _composite(composite), _current(0) {
+    }
+
+    void First() { _current = 0; };
+
+    void Next() { _current++; };
+
+    Directory *CurrentItem() const {
+        return (IsDone() ? NULL : _composite->get(_current));
+    };
+
+    bool IsDone() const {
+        return _current >= _composite->getCount();
+    };
+private:
+    Directory *_composite;
+    int _current;
+};
+
+/**
+ * Composite Pattern Leaf
+ *
+ */
 
 class File : public Directory {
 public:
-	File(string name) : Directory(name) {};
-	void Display(int indent) {
-		for (int i = 1;i <= indent;i++) { cout << "-"; }
-		cout << " " << getName() << endl;
-	}
+    File(string name) : Directory(name) {};
+
+    void Display(int indent) {
+        for (int i = 1; i <= indent; i++) { cout << "-"; }
+        cout << " " << getName() << endl;
+    }
 };
 
-//  "Composite" - COMPOSITE PATTERN
-
+/**
+ * Composite Pattern Composite
+ */
 class Node : public Directory {
 
 public:
-	Node(string name) : Directory(name) { cout << name << " Created\n"; };
-	Directory *get(int index) { return elements[index]; };
-	int getCount() { return elements.size(); };
-	void Add(Directory* d) {
-		elements.push_back(d);
-		cout << d->getName() << " Added\n";
-	};
+    Node(string name) : Directory(name) { cout << name << " Created\n"; };
 
-	void Delete() {
-		Directory *temp;
-		CompositeIterator *i = CreateIterator();
-		for (i->First(); !i->IsDone(); i->Next()) {
-			i->CurrentItem()->Delete();
-			cout << "Deleting " << i->CurrentItem()->getName() << endl;
-			delete i->CurrentItem();
-		}
-		delete i;
-	}
+    Directory *get(int index) { return elements[index]; };
 
-	void Remove(Directory* d) {
-		CompositeIterator *i = CreateIterator();
-		int count = 0;
-		for (i->First(); !i->IsDone(); i->Next()) {
-			if (i->CurrentItem()->getName() == d->getName()) {
-				elements.erase(elements.begin() + count);
-				delete i;
-				return;
-			}
-			else count++;
-		}
-		delete i;
-	}
+    int getCount() { return elements.size(); };
 
-	void Display(int indent) {
-		for (int i = 1;i <= indent;i++) { cout << "-"; }
-		cout << "+ " + getName() << endl;
+    void Add(Directory *d) {
+        elements.push_back(d);
+        cout << d->getName() << " Added\n";
+    };
 
-		CompositeIterator *i = CreateIterator();
-		for (i->First(); !i->IsDone(); i->Next())
-			i->CurrentItem()->Display(indent + 2);
-		delete i;
-	}
-	CompositeIterator* CreateIterator() {
-		return new CompositeIterator(this);
-	}
+    void Delete() {
+        Directory *temp;
+        CompositeIterator *i = CreateIterator();
+        for (i->First(); !i->IsDone(); i->Next()) {
+            i->CurrentItem()->Delete();
+            cout << "Deleting " << i->CurrentItem()->getName() << endl;
+            delete i->CurrentItem();
+        }
+        delete i;
+    }
+
+    void Remove(Directory *d) {
+        CompositeIterator *i = CreateIterator();
+        int count = 0;
+        for (i->First(); !i->IsDone(); i->Next()) {
+            if (i->CurrentItem()->getName() == d->getName()) {
+                elements.erase(elements.begin() + count);
+                delete i;
+                return;
+            } else count++;
+        }
+        delete i;
+    }
+
+    void Display(int indent) {
+        for (int i = 1; i <= indent; i++) { cout << "-"; }
+        cout << "+ " + getName() << endl;
+
+        CompositeIterator *i = CreateIterator();
+        for (i->First(); !i->IsDone(); i->Next())
+            i->CurrentItem()->Display(indent + 2);
+        delete i;
+    }
+
+    CompositeIterator *CreateIterator() {
+        return new CompositeIterator(this);
+    }
 
 private:
-	vector<Directory*> elements;
+    vector<Directory *> elements;
 };
 
+/**
+* Command Pattern
+* Command
+*/
+class OperatingSys {
+public:
+    virtual void exec() = 0;
+
+protected:
+    OperatingSys() {};
+};
+
+/**
+* Commands
+*/
+
+class OpenFile : public OperatingSys {
+public:
+    OpenFile(OperatingSys *osFactory) {
+        fileSystem = osFactory;
+    }
+
+    void exec() {
+        fileSystem->exec();
+    }
+
+private:
+    OperatingSys *fileSystem;
+};
+
+class WriteFile : public OperatingSys {
+public:
+    WriteFile(OperatingSys *osFactory) {
+        fileSystem = osFactory;
+    }
+
+    void exec() {
+        fileSystem->exec();
+    }
+
+private:
+    OperatingSys *fileSystem;
+};
+
+class CloseFile : public OperatingSys {
+public:
+
+    CloseFile(OperatingSys *osFactory) {
+        fileSystem = osFactory;
+    }
+
+    void exec() {
+        fileSystem->exec();
+    }
+
+private:
+    OperatingSys *fileSystem;
+};
+
+class ShutDownDevices : public OperatingSys {
+    vector<Components *> components;
+public:
+    ShutDownDevices(vector<Components *> d) {
+        components = d;
+    }
+
+    void exec() {
+        for (unsigned long i = 0; i <= components.size() - 1; i++) {
+            components[i]->deviceReset();
+        }
+    }
+};
+
+/**
+* Invoker
+*/
+
+class FileInvoker {
+public:
+    OperatingSys *operatingSys;
+
+    FileInvoker(OperatingSys *os) {
+        operatingSys = os;
+    }
+
+    void exec() {
+        operatingSys->exec();
+    }
+};
 
 class FileSystem {
 public:
-	virtual void bootOS() = 0;
+    virtual void bootOS() = 0;
 
-	virtual void loadFS() = 0;
-
-	//    virtual void openFile() = 0;
-	//
-	//    virtual void writeFile() = 0;
-	//
-	//    virtual void closeFile() = 0;
+    virtual void loadFS() = 0;
 
 };
 
@@ -136,34 +359,21 @@ public:
 
 class Linux : public FileSystem {
 public:
-	void bootOS() {
-		cout << "Booting into Linux \n";
-	}
+    void bootOS() {
+        cout << "Booting into Linux \n";
+    }
 
-	void loadFS() {
-		Node* root = new Node("nodeLinux");
-		root->Add(new File("leafLinux"));
-		Directory* _directory = new File("directoryLinux");
-		root->Add(_directory);
-		root->Display(1);
+    void loadFS() {
+        Node *root = new Node("Linux Node");
+        root->Add(new File("Linux Leaf"));
+        Directory *_directory = new File("Linux Directory");
+        root->Add(_directory);
+        root->Display(1);
 
-		cout << "\n---Initializing Kernel \n"
-			"---Executing systemd \n"
-			"user@user:~$";
-	}
-
-	//    void openFile() {
-	//        cout << "Opening file in Linux OS" << endl;
-	//    }
-	//
-	//    void writeFile() {
-	//        cout << "Writing file in Linux OS" << endl;
-	//    }
-	//
-	//    void closeFile() {
-	//        cout << "Closing file in Linux OS" << endl;
-	//    }
-
+        cout << "\n---Initializing Kernel \n"
+                "---Executing systemd \n"
+                "user@user:~$";
+    }
 };
 
 /**
@@ -172,32 +382,21 @@ public:
 
 class BSD : public FileSystem {
 public:
-	void bootOS() {
-		cout << "Booting into BSD \n";
-	}
+    void bootOS() {
+        cout << "Booting into BSD \n";
+    }
 
-	void loadFS() {
-		Node* root = new Node("nodeBSD");
-		root->Add(new File("leafBSD"));
-		Directory* _directory = new File("directoryBSD");
-		root->Add(_directory);
-		root->Display(1);
+    void loadFS() {
+        Node *root = new Node("BSD Node");
+        root->Add(new File("BSD Leaf"));
+        Directory *_directory = new File("BSD Directory");
+        root->Add(_directory);
+        root->Display(1);
 
-		cout << " \n---Initializing Kernel \n"
-			"---Executing systemd \n"
-			"user@user:~#";
-	}
-	//    void openFile() {
-	//        cout << "Opening file in BSD OS" << endl;
-	//    }
-	//
-	//    void writeFile() {
-	//        cout << "Writing file in BSD OS" << endl;
-	//    }
-	//
-	//    void closeFile() {
-	//        cout << "Closing file in BSD OS" << endl;
-	//    }
+        cout << " \n---Initializing Kernel \n"
+                "---Executing systemd \n"
+                "user@user:~#";
+    }
 
 };
 
@@ -207,35 +406,23 @@ public:
 
 class NT : public FileSystem {
 public:
-	void bootOS() {
-		cout << "Booting into NT \n";
-	}
+    void bootOS() {
+        cout << "Booting into NT \n";
+    }
 
-	void loadFS() {
-		Node* root = new Node("nodeNT");
-		root->Add(new File("leafNT"));
-		Directory* _directory = new File("directoryNT");
-		root->Add(_directory);
-		root->Display(1);
+    void loadFS() {
+        Node *root = new Node("Windows NT Node");
+        root->Add(new File("Windows NT Leaf"));
+        Directory *_directory = new File("Windows NT Directory");
+        root->Add(_directory);
+        root->Display(1);
 
-		cout << "\n---DO NOT use Windows, use GNU/Linux or BSD instead\n"
-			"---Initializing Windows Kernel \n"
-			"Microsoft Windows [Version 10.0.14393] \n"
-			"(c) 2016 Microsoft Corporation. All rights reserved. \n"
-			"C:\\Users\\User> \n";
-	}
-	//
-	//    void openFile() {
-	//        cout << "Opening file in BSD OS" << endl;
-	//    }
-	//
-	//    void writeFile() {
-	//        cout << "Writing file in BSD OS" << endl;
-	//    }
-	//
-	//    void closeFile() {
-	//        cout << "Closing file in BSD OS" << endl;
-	//    }
+        cout << "\n---DO NOT use Windows, use GNU/Linux or BSD instead\n"
+                "---Initializing Windows Kernel \n"
+                "Microsoft Windows [Version 10.0.14393] \n"
+                "(c) 2016 Microsoft Corporation. All rights reserved. \n"
+                "C:\\Users\\User> \n";
+    }
 
 
 };
@@ -247,15 +434,17 @@ public:
 
 class OSFactory {
 public:
-	virtual FileSystem *loadFileSystem() = 0;
+    virtual FileSystem *loadFileSystem() = 0;
 
-	virtual FileSystem *boot() = 0;
+    OSFactory() {}
 
-	virtual FileSystem *openFile() = 0;
+    virtual FileSystem *boot() = 0;
 
-	virtual FileSystem *writeFile() = 0;
+    virtual OpenFile *openFile() = 0;
 
-	virtual FileSystem *closeFile() = 0;
+    virtual WriteFile *writeFile() = 0;
+
+    virtual CloseFile *closeFile() = 0;
 
 
 };
@@ -267,32 +456,35 @@ public:
 */
 class LinuxFactory : public OSFactory {
 public:
-	FileSystem *loadFileSystem() {
-		return new Linux;
-	}
+    FileSystem *loadFileSystem() {
+        return new Linux;
+    }
 
-	FileSystem *boot() {
-		return new Linux;
-	}
+    FileSystem *boot() {
+        return new Linux;
+    }
 
-	FileSystem *openFile() {
-		cout << "Opening file in Linux OS" << endl;
-		return NULL;
-	}
+    OpenFile *openFile() {
+        cout << "\nBoot Successful \n"
+                "Opening file in Linux OS\n"
+                "--/Awaiting input stream..." << endl;
+        return NULL;
+    }
 
-	FileSystem *writeFile() {
-		cout << "Writing file in Linux OS" << endl;
-		return NULL;
-	}
+    WriteFile *writeFile() {
+        cout << "Write file in Linux OS" << endl;
+        return NULL;
+    }
 
-	FileSystem *closeFile() {
-		cout << "Closing file in Linux OS" << endl;
-		return NULL;
-	}
+    CloseFile *closeFile() {
+        cout << "Closing file in Linux OS" << endl;
+        return NULL;
+    }
 
-	FileSystem *getName() {
-		return new Linux;
-	}
+    FileSystem *getName() {
+        return new Linux;
+    }
+
 };
 
 /**
@@ -301,54 +493,59 @@ public:
 */
 class BSDFactory : public OSFactory {
 public:
-	FileSystem *loadFileSystem() {
-		return new BSD;
-	}
+    FileSystem *loadFileSystem() {
+        return new BSD;
+    }
 
-	FileSystem *boot() {
-		return new BSD;
-	}
+    FileSystem *boot() {
+        return new BSD;
+    }
 
-	FileSystem *openFile() {
-		cout << "Opening file in BSD OS" << endl;
-		return NULL;
-	}
+    OpenFile *openFile() {
+        cout << "\nBoot Successful \n"
+                "Opening file in BSD OS\n"
+                "--/Awaiting input stream..." << endl;
+        return NULL;
+    }
 
-	FileSystem *writeFile() {
-		cout << "Writing file in BSD OS" << endl;
-		return NULL;
-	}
+    WriteFile *writeFile() {
+        cout << "Write file in BSD OS" << endl;
+        return NULL;
+    }
 
-	FileSystem *closeFile() {
-		cout << "Closing file in BSD OS" << endl;
-		return NULL;
-	}
+    CloseFile *closeFile() {
+        cout << "Closing file in BSD OS" << endl;
+        return NULL;
+    }
+
 };
 
 class NTFactory : public OSFactory {
 public:
-	FileSystem *loadFileSystem() {
-		return new NT;
-	}
+    FileSystem *loadFileSystem() {
+        return new NT;
+    }
 
-	FileSystem *boot() {
-		return new NT;
-	}
+    FileSystem *boot() {
+        return new NT;
+    }
 
-	FileSystem *openFile() {
-		cout << "Opening file in Windows OS" << endl;
-		return NULL;
-	}
+    OpenFile *openFile() {
+        cout << "\nBoot Successful \n"
+                "Opening file in Windows OS\n"
+                "--/Awaiting input stream..." << endl;
+        return NULL;
+    }
 
-	FileSystem *writeFile() {
-		cout << "Writing file in Windows OS" << endl;
-		return NULL;
-	}
+    WriteFile *writeFile() {
+        cout << "Write file in Windows OS" << endl;
+        return NULL;
+    }
 
-	FileSystem *closeFile() {
-		cout << "Closing file in Windows OS" << endl;
-		return NULL;
-	}
+    CloseFile *closeFile() {
+        cout << "Closing file in Windows OS" << endl;
+        return NULL;
+    }
 };
 
 /**
@@ -358,181 +555,79 @@ public:
 
 class OSClient {
 private:
-	OSFactory *factory;
+    OSFactory *factory;
 
 public:
-	OSClient(OSFactory *f) {
-		factory = f;
-	}
+    OSClient(OSFactory *f) {
+        factory = f;
+    }
 
+    void display_IO() {
+        FileSystem *fileSystem[] = {
+                factory->boot(),
+                factory->loadFileSystem(),
+        };
+        fileSystem[0]->bootOS();
+        fileSystem[1]->loadFS();
+        factory->openFile();
+        factory->writeFile();
+        factory->closeFile();
+    }
 
-
-	void display_IO() {
-		FileSystem *fileSystem[] = {
-			factory->boot(),
-			factory->loadFileSystem(),
-		};
-		fileSystem[0]->bootOS();
-		fileSystem[1]->loadFS();
-
-
-
-
-		//        fileSystem[2]->openFile();
-		//        fileSystem[3]->writeFile();
-		//        fileSystem[4]->closeFile();
-	}
 };
 
-/**
-* Command Pattern
-* Command
-*/
-class OperatingSys {
-public:
-	virtual void exec() = 0;
-
-protected:
-	OperatingSys() {};
-};
 
 /**
-* Commands
-*/
+ * Singleton Pattern
+ */
 
-class OpenFile : public OperatingSys {
-public:
-	OpenFile(OSFactory *osFactory) {
-		fileSystem = osFactory;
-	}
-
-	void exec() {
-		fileSystem->openFile();
-	}
-
+class Computer {
 private:
-	OSFactory *fileSystem;
-};
-
-class WriteFile : public OperatingSys {
+    vector<Components *> components;
+    OSFactory *osFactory;
+    OperatingSys *operatingSys;
+    char osType;
 public:
-	WriteFile(OSFactory *osFactory) {
-		fileSystem = osFactory;
-	}
+    Computer() {
+        components.push_back(new HDD(this));
+        components.push_back(new CPU(this));
+        components.push_back(new Keyboard(this));
+        components.push_back(new Mouse(this));
 
-	void exec() {
-		fileSystem->writeFile();
-	}
+        cout << "GRUB MENU: \n"
+                "Choose OS: \n "
+                "l for Linux \n"
+                "b for BSD \n"
+                "n for WindowsNT" << endl;
+        cin >> osType;
 
-private:
-	OSFactory *fileSystem;
-};
+        switch (osType) {
+            case 'l':
+                osFactory = new LinuxFactory;
+                break;
+            case 'b':
+                osFactory = new BSDFactory;
+                break;
+            case 'n':
+                osFactory = new NTFactory;
+                break;
+            default:
+                cout << "You did not choose a correct operating system.";
+        }
+        OSClient *c = new OSClient(osFactory);
+        c->display_IO();
+        delete c;
+        operatingSys = new ShutDownDevices(components);
+        operatingSys->exec();
+    }
 
-class CloseFile : public OperatingSys {
-public:
-
-	CloseFile(OSFactory *osFactory) {
-		fileSystem = osFactory;
-	}
-
-	void exec() {
-		fileSystem->closeFile();
-	}
-
-private:
-	OSFactory *fileSystem;
-};
-
-/**
-* Invoker
-*/
-
-class FileInvoker {
-public:
-	OperatingSys *operatingSys;
-
-	FileInvoker(OperatingSys *os) {
-		operatingSys = os;
-	}
-
-	void exec() {
-		operatingSys->exec();
-	}
-};
-
-
-/**
-* Client
-*/
-
-//class FileSystemClient {
-//public:
-//
-//};
-
-
-/**
-* Macro Command
-*
-*/
-class RestartCommand : public OperatingSys {
-public:
-	void exec() {
-
-	}
-
+    ~Computer() {};
 };
 
 
 int main() {
-	OSFactory *factory;
-
-	//    //creating command and associating with receiver
-	//    OpenFile *openFileCommand = new OpenFile(factory);
-	//
-	//    //Creating invoker and associating with Command
-	//    FileInvoker *file = new FileInvoker(openFileCommand);
-	//
-	//    //perform action on invoker object
-	//    file->exec();
-	//
-	//    WriteFile *writeFileCommand = new WriteFile(factory);
-	//    file = new FileInvoker(writeFileCommand);
-	//    file->exec();
-	//
-	//    CloseFile *closeFileCommand = new CloseFile(factory);
-	//    file = new FileInvoker(closeFileCommand);
-	//    file->exec();
-
-	char osType;
-	cout << "GRUB MENU: \n"
-		"Choose OS: \n "
-		"l for Linux \n"
-		"b for BSD \n"
-		"n for WindowsNT" << endl;
-	cin >> osType;
-
-	switch (osType) {
-	case 'l':
-		factory = new LinuxFactory;
-		break;
-	case 'b':
-		factory = new BSDFactory;
-		break;
-	case 'n':
-		factory = new NTFactory;
-		break;
-	default:
-		cout << "You did not choose a correct operating system.";
-	}
-
-	OSClient *c = new OSClient(factory);
-	c->display_IO();
-	delete c;
-
-
-
-	system("PAUSE");
-	return 0;
-
+    Computer *computer = new Computer();
+    delete computer;
+    return 0;
 }
+
